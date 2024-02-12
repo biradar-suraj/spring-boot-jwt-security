@@ -4,6 +4,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.hibernate.PropertyValueException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
@@ -22,5 +23,16 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
                 .timeStamp(LocalDateTime.now())
                 .build();
         return new ResponseEntity<>(errorDetails, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(UsernameNotFoundException.class)
+    public ResponseEntity<?> handleUsernameNotFoundException(
+            UsernameNotFoundException exception, HttpServletRequest request) {
+        var errorDetails = ErrorDetails.builder()
+                .message("Username not found")
+                .path(String.valueOf(request.getRequestURI()))
+                .timeStamp(LocalDateTime.now())
+                .build();
+        return new ResponseEntity<>(errorDetails, HttpStatus.NOT_FOUND);
     }
 }

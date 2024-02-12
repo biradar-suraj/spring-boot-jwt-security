@@ -5,6 +5,8 @@ import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
@@ -16,6 +18,7 @@ import java.util.function.Function;
 
 @Service
 public class JwtService {
+    private static final Logger LOGGER = LoggerFactory.getLogger(JwtService.class);
     private static final String SECRET_KEY = "6328263b3466227234633d363678477048586235674d6e6f2a65464865";
     private static final long TOKEN_VALIDITY = 24 * 60 * 60 * 1000;
 
@@ -51,17 +54,27 @@ public class JwtService {
     }
 
     public <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
-        final Claims claims = extarctAllClaims(token);
-        return claimsResolver.apply(claims);
+        try {
+            final Claims claims = extarctAllClaims(token);
+            return claimsResolver.apply(claims);
+        } catch (Exception e) {
+            LOGGER.error("Failed to extract claim token", e);
+            return null;
+        }
 
     }
 
     public Claims extarctAllClaims(String token) {
-        return Jwts.parserBuilder()
-                .setSigningKey(getSignInKey())
-                .build()
-                .parseClaimsJws(token)
-                .getBody();
+        try {
+            return Jwts.parserBuilder()
+                    .setSigningKey(getSignInKey())
+                    .build()
+                    .parseClaimsJws(token)
+                    .getBody();
+        } catch (Exception e) {
+            LOGGER.error("Failed to parse token", e);
+            return null;
+        }
     }
 
     private Key getSignInKey() {
